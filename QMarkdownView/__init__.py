@@ -1,14 +1,19 @@
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtCore import QUrl, QObject, Slot
+from PySide6.QtCore import QUrl, QObject, Slot, QMarginsF
+from PySide6.QtGui import QAction, QPageLayout, QPageSize
 from PySide6.QtWebChannel import QWebChannel
 import markdown, base64, urllib.parse
+from PySide6.QtWidgets import QMenu, QApplication, QFileDialog, QMessageBox
 from QMarkdownView.resources import qInitResources
 import webbrowser, copy
 from enum import Enum
 
 
 __all__ = ["MarkdownView", "LinkMiddlewarePolicy"]
-
+aboutInformation = """QMarkdownView 0.2
+a package based on PySide6 designed to help you preview Markdown documents.
+https://github.com/hellojudger/QMarkdownView
+"""
 
 class LinkMiddlewarePolicy(Enum):
     OpenNewTab = 0
@@ -56,7 +61,27 @@ class MarkdownView(QWebEngineView):
         return self.value
 
     def contextMenuEvent(self, arg__1) -> None:
-        arg__1.ignore()
+        menu = QMenu(self)
+        reload_page = QAction("Reload")
+        reload_page.triggered.connect(lambda : self.setValue(self.getValue()))
+        copy_page = QAction("Copy Source Code")
+        def Copy():
+            QApplication.clipboard().setText(self.getValue())
+            QMessageBox.information(self, "Markdown View", "Source code has been copied to clipboard.")
+        copy_page.triggered.connect(Copy)
+        pdf_export = QAction("Export to PDF")
+        def pdfExport():
+            fp = QFileDialog.getSaveFileName(self, "Save PDF...", filter = "PDF(*.pdf)")[0]
+            if fp is None or fp == "":
+                return
+            lay = QPageLayout(QPageSize(QPageSize.PageSizeId.A4), QPageLayout.Orientation.Portrait, QMarginsF())
+            self.page().printToPdf(fp, lay)
+            QMessageBox.information(self, "Markdown View", "The document has been exported successfully.")
+        pdf_export.triggered.connect(pdfExport)
+        about = QAction("About")
+        about.triggered.connect(lambda : QMessageBox.information(self, "Markdown View", aboutInformation))
+        menu.addActions([reload_page, copy_page, pdf_export, about])
+        menu.exec(arg__1.globalPos())
 
     def setLinkMiddlewarePolicy(self, policy) -> None:
         self.link_middleware.policy = policy

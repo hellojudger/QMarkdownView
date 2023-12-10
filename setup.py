@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="QMarkdownView",
-    version="0.1",
+    version="0.2",
     author="xiezheyuan",
     author_email="xiezheyuan09@163.com",
     description="a package based on PySide6 designed to help you preview Markdown documents.",
